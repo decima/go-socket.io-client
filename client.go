@@ -18,7 +18,7 @@ type Options struct {
 type Client struct {
 	opts *Options
 
-	conn *clientConn
+	Conn *clientConn
 
 	eventsLock sync.RWMutex
 	events     map[string]*caller
@@ -53,7 +53,7 @@ func NewClient(uri string, opts *Options) (client *Client, err error) {
 
 	client = &Client{
 		opts: opts,
-		conn: socket,
+		Conn: socket,
 
 		events: make(map[string]*caller),
 		acks:   make(map[int]*caller),
@@ -108,7 +108,7 @@ func (client *Client) sendConnect() error {
 		Id:   -1,
 		NSP:  client.namespace,
 	}
-	encoder := newEncoder(client.conn)
+	encoder := newEncoder(client.Conn)
 	return encoder.Encode(packet)
 }
 
@@ -126,7 +126,7 @@ func (client *Client) sendId(args []interface{}) (int, error) {
 	}
 	client.eventsLock.Unlock()
 
-	encoder := newEncoder(client.conn)
+	encoder := newEncoder(client.Conn)
 	err := encoder.Encode(packet)
 	if err != nil {
 		return -1, nil
@@ -141,7 +141,7 @@ func (client *Client) send(args []interface{}) error {
 		NSP:  client.namespace,
 		Data: args,
 	}
-	encoder := newEncoder(client.conn)
+	encoder := newEncoder(client.Conn)
 	return encoder.Encode(packet)
 }
 
@@ -227,7 +227,7 @@ func (client *Client) readLoop() error {
 	}()
 
 	for {
-		decoder := newDecoder(client.conn)
+		decoder := newDecoder(client.Conn)
 		var p packet
 		if err := decoder.Decode(&p); err != nil {
 			return err
@@ -251,7 +251,7 @@ func (client *Client) readLoop() error {
 					NSP:  client.namespace,
 					Data: ret,
 				}
-				encoder := newEncoder(client.conn)
+				encoder := newEncoder(client.Conn)
 				if err := encoder.Encode(p); err != nil {
 					return err
 				}
